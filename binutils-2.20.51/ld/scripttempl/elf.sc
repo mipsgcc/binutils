@@ -150,7 +150,7 @@ RELA_IPLT=".rela.iplt    ${RELOCATING-0} :
     }"
 DYNAMIC=".dynamic      ${RELOCATING-0} : { *(.dynamic) }"
 RODATA=".${RODATA_NAME}       ${RELOCATING-0} : { *(.${RODATA_NAME}${RELOCATING+ .${RODATA_NAME}.* .gnu.linkonce.r.*}) }"
-DATARELRO=".data.rel.ro : { *(.data.rel.ro.local*) *(.data.rel.ro*) }"
+DATARELRO=".data.rel.ro : { *(.data.rel.ro.local* .gnu.linkonce.d.rel.ro.local.*) *(.data.rel.ro* .gnu.linkonce.d.rel.ro.*) }"
 DISCARDED="/DISCARD/ : { *(.note.GNU-stack) *(.gnu_debuglink) *(.mdebug.*) }"
 if test -z "${NO_SMALL_DATA}"; then
   SBSS=".${SBSS_NAME}         ${RELOCATING-0} :
@@ -227,8 +227,18 @@ test "${LARGE_SECTIONS}" = "yes" && LARGE_SECTIONS="
     *(.ldata${RELOCATING+ .ldata.* .gnu.linkonce.l.*})
     ${RELOCATING+. = ALIGN(. != 0 ? ${ALIGNMENT} : 1);}
   }"
-INIT_ARRAY=".init_array   ${RELOCATING-0} : { KEEP (*(.init_array)) }"
-FINI_ARRAY=".fini_array   ${RELOCATING-0} : { KEEP (*(.fini_array)) }"
+INIT_ARRAY=".init_array   ${RELOCATING-0} :
+  {
+    KEEP (*crtbegin*.o(.init_array))
+    KEEP (*(SORT(.init_array.*)))
+    KEEP (*(.init_array))
+  }"
+FINI_ARRAY=".fini_array   ${RELOCATING-0} :
+  {
+    KEEP (*crtbegin*.o(.fini_array))
+    KEEP (*(SORT(.fini_array.*)))
+    KEEP (*(.fini_array))
+  }"
 CTOR=".ctors        ${CONSTRUCTING-0} : 
   {
     ${CONSTRUCTING+${CTOR_START}}
@@ -243,14 +253,14 @@ CTOR=".ctors        ${CONSTRUCTING-0} :
        is in.  */
 
     KEEP (*crtbegin.o(.ctors))
-    KEEP (*crtbegin?.o(.ctors))
+    KEEP (*crtbegin*.o(.ctors))
 
     /* We don't want to include the .ctor section from
        the crtend.o file until after the sorted ctors.
        The .ctor section from the crtend file contains the
        end of ctors marker and it must be last */
 
-    KEEP (*(EXCLUDE_FILE (*crtend.o *crtend?.o $OTHER_EXCLUDE_FILES) .ctors))
+    KEEP (*(EXCLUDE_FILE (*crtend.o *crtend*.o $OTHER_EXCLUDE_FILES) .ctors))
     KEEP (*(SORT(.ctors.*)))
     KEEP (*(.ctors))
     ${CONSTRUCTING+${CTOR_END}}
@@ -259,8 +269,8 @@ DTOR=".dtors        ${CONSTRUCTING-0} :
   {
     ${CONSTRUCTING+${DTOR_START}}
     KEEP (*crtbegin.o(.dtors))
-    KEEP (*crtbegin?.o(.dtors))
-    KEEP (*(EXCLUDE_FILE (*crtend.o *crtend?.o $OTHER_EXCLUDE_FILES) .dtors))
+    KEEP (*crtbegin*.o(.dtors))
+    KEEP (*(EXCLUDE_FILE (*crtend.o *crtend*.o $OTHER_EXCLUDE_FILES) .dtors))
     KEEP (*(SORT(.dtors.*)))
     KEEP (*(.dtors))
     ${CONSTRUCTING+${DTOR_END}}
@@ -335,8 +345,8 @@ eval $COMBRELOCCAT <<EOF
   .rel.${RODATA_NAME}   ${RELOCATING-0} : { *(.rel.${RODATA_NAME}${RELOCATING+ .rel.${RODATA_NAME}.* .rel.gnu.linkonce.r.*}) }
   .rela.${RODATA_NAME}  ${RELOCATING-0} : { *(.rela.${RODATA_NAME}${RELOCATING+ .rela.${RODATA_NAME}.* .rela.gnu.linkonce.r.*}) }
   ${OTHER_READONLY_RELOC_SECTIONS}
-  .rel.data.rel.ro ${RELOCATING-0} : { *(.rel.data.rel.ro${RELOCATING+*})  }
-  .rela.data.rel.ro ${RELOCATING-0} : { *(.rela.data.rel.ro${RELOCATING+*}) }
+  .rel.data.rel.ro ${RELOCATING-0} : { *(.rel.data.rel.ro${RELOCATING+*} .rel.gnu.linkonce.d.rel.ro.*)  }
+  .rela.data.rel.ro ${RELOCATING-0} : { *(.rela.data.rel.ro${RELOCATING+*} .rela.gnu.linkonce.d.rel.ro.*) }
   .rel.data     ${RELOCATING-0} : { *(.rel.data${RELOCATING+ .rel.data.* .rel.gnu.linkonce.d.*}) }
   .rela.data    ${RELOCATING-0} : { *(.rela.data${RELOCATING+ .rela.data.* .rela.gnu.linkonce.d.*}) }
   ${OTHER_READWRITE_RELOC_SECTIONS}
@@ -434,7 +444,7 @@ cat <<EOF
   ${OTHER_READONLY_SECTIONS}
   .eh_frame_hdr : { *(.eh_frame_hdr) }
   .eh_frame     ${RELOCATING-0} : ONLY_IF_RO { KEEP (*(.eh_frame)) }
-  .gcc_except_table ${RELOCATING-0} : ONLY_IF_RO { KEEP(*(.gcc_except_table)) *(.gcc_except_table.*) }
+  .gcc_except_table ${RELOCATING-0} : ONLY_IF_RO { *(.gcc_except_table .gcc_except_table.*) }
   /* Adjust the address for the data segment.  We want to align at exactly
      a page boundary to make life easier for apriori. */
 /*  ${CREATE_SHLIB-${CREATE_PIE-${RELOCATING+. = ${DATA_ADDR-${DATA_SEGMENT_ALIGN}};}}}
@@ -445,7 +455,7 @@ cat <<EOF
 
   /* Exception handling  */
   .eh_frame     ${RELOCATING-0} : ONLY_IF_RW { KEEP (*(.eh_frame)) }
-  .gcc_except_table ${RELOCATING-0} : ONLY_IF_RW { KEEP(*(.gcc_except_table)) *(.gcc_except_table.*) }
+  .gcc_except_table ${RELOCATING-0} : ONLY_IF_RW { *(.gcc_except_table .gcc_except_table.*) }
 
   /* Thread Local Storage sections  */
   .tdata	${RELOCATING-0} : { *(.tdata${RELOCATING+ .tdata.* .gnu.linkonce.td.*}) }
