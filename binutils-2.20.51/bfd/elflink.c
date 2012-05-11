@@ -8633,10 +8633,11 @@ elf_link_output_extsym (struct elf_link_hash_entry *h, void *data)
 
   /* We should also warn if a forced local symbol is referenced from
      shared libraries.  */
-  if (! finfo->info->relocatable
-      && (! finfo->info->shared)
+  if (!finfo->info->relocatable
+      && finfo->info->executable
       && h->forced_local
       && h->ref_dynamic
+      && h->def_regular
       && !h->dynamic_def
       && !h->dynamic_weak
       && ! elf_link_check_versioned_symbol (finfo->info, bed, h))
