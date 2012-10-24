@@ -7365,8 +7365,9 @@ _bfd_mips_elf_create_dynamic_sections (bfd *abfd, struct bfd_link_info *info)
   flags = (SEC_ALLOC | SEC_LOAD | SEC_HAS_CONTENTS | SEC_IN_MEMORY
 	   | SEC_LINKER_CREATED | SEC_READONLY);
 
+#if 0
   /* The psABI requires a read-only .dynamic section, but the VxWorks
-     EABI doesn't.  */
+     EABI and Android doesn't.  */
   if (!htab->is_vxworks)
     {
       s = bfd_get_section_by_name (abfd, ".dynamic");
@@ -7376,6 +7377,7 @@ _bfd_mips_elf_create_dynamic_sections (bfd *abfd, struct bfd_link_info *info)
 	    return FALSE;
 	}
     }
+#endif
 
   /* We need to create .got section.  */
   if (!mips_elf_create_got_section (abfd, info))
